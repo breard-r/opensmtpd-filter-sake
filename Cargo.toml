@@ -8,3 +8,5 @@ license = "MIT OR Apache-2.0"
 publish = false
 
 [dependencies]
+anyhow = { version = "1.0.71", default-features = false, features = ["std"] }
+clap = { version = "4.3.11", default-features = false, features = ["derive", "std"] }
