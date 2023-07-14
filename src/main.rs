@@ -12,7 +12,7 @@ fn main() -> ExitCode {
 	match service::start_service() {
 		Ok(_) => ExitCode::SUCCESS,
 		Err(e) => {
-			eprintln!("{e}");
+			eprintln!("error: {e:#}");
 			ExitCode::FAILURE
 		}
 	}
