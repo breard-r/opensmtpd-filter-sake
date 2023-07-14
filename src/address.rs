@@ -6,7 +6,7 @@ use std::str::FromStr;
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct CodedAddress {
 	local_part: String,
-	sub_addr: String,
+	sub_addr: Option<String>,
 	code: Vec<u8>,
 	domain: Option<String>,
 }
@@ -17,10 +17,17 @@ impl FromStr for CodedAddress {
 	fn from_str(s: &str) -> Result<Self> {
 		let (local_part, domain) = split_local_part(s);
 		let parts: Vec<&str> = local_part.split(crate::DEFAULT_SEPARATOR).collect();
-		ensure!(parts.len() == 3, "{s}: invalid number of parts");
 		let local_part = parts[0].to_string();
-		let sub_addr = parts[1].to_string();
-		let code = BASE32_NOPAD.decode(parts[2].to_uppercase().as_bytes())?;
+		let sub_addr = if parts.len() >= 2 {
+			Some(parts[1].to_string())
+		} else {
+			None
+		};
+		let code = if parts.len() >= 3 {
+			BASE32_NOPAD.decode(parts[2].to_uppercase().as_bytes())?
+		} else {
+			Vec::new()
+		};
 		Ok(Self {
 			local_part,
 			sub_addr,
@@ -52,7 +59,14 @@ impl PartialEq for KeyedAddress {
 
 impl PartialEq<CodedAddress> for KeyedAddress {
 	fn eq(&self, other: &CodedAddress) -> bool {
-		self.local_part == other.local_part && self.domain == other.domain
+		if let Some(domain_k) = &self.domain {
+			if let Some(domain_c) = &other.domain {
+				if domain_k != domain_c {
+					return false;
+				}
+			}
+		}
+		self.local_part == other.local_part
 	}
 }
 
@@ -102,7 +116,7 @@ mod tests {
 		assert!(addr.is_ok(), "unable to parse {addr_str}: {addr:?}");
 		let addr = addr.unwrap();
 		assert_eq!(addr.local_part, "a");
-		assert_eq!(addr.sub_addr, "test");
+		assert_eq!(addr.sub_addr, Some("test".to_string()));
 		assert_eq!(addr.code, b"test");
 		assert_eq!(addr.domain, Some("example.org".to_string()));
 	}
@@ -114,7 +128,21 @@ mod tests {
 		assert!(addr.is_ok(), "unable to parse {addr_str}: {addr:?}");
 		let addr = addr.unwrap();
 		assert_eq!(addr.local_part, "local.part");
-		assert_eq!(addr.domain, None);
+		assert_eq!(addr.sub_addr, Some("test".to_string()));
+		assert_eq!(addr.code, b"test");
+		assert!(addr.domain.is_none());
+	}
+
+	#[test]
+	fn parse_valid_coded_addr_without_sub_addr() {
+		let addr_str = "local.part@example.org";
+		let addr = CodedAddress::from_str(addr_str);
+		assert!(addr.is_ok(), "unable to parse {addr_str}: {addr:?}");
+		let addr = addr.unwrap();
+		assert_eq!(addr.local_part, "local.part");
+		assert!(addr.sub_addr.is_none());
+		assert!(addr.code.is_empty());
+		assert_eq!(addr.domain, Some("example.org".to_string()));
 	}
 
 	#[test]
@@ -230,6 +258,13 @@ mod tests {
 	fn cmp_addr_types_without_domain_eq() {
 		let addr_1 = KeyedAddress::from_str("test:3d74YQqk").unwrap();
 		let addr_2 = CodedAddress::from_str("test+test+orsxg5a").unwrap();
+		assert_eq!(addr_1, addr_2);
+	}
+
+	#[test]
+	fn cmp_addr_types_without_sub_addr() {
+		let addr_1 = KeyedAddress::from_str("test@example.org:3d74YQqk").unwrap();
+		let addr_2 = CodedAddress::from_str("test@example.org").unwrap();
 		assert_eq!(addr_1, addr_2);
 	}
 
