@@ -1,14 +1,19 @@
-use clap::Parser;
+use std::process::ExitCode;
 
 mod address;
 mod config;
+mod service;
 
 const COMMENT_CHAR: char = '#';
 const DEFAULT_SEPARATOR: char = '+';
 const KEY_SEPARATOR: char = ':';
 
-fn main() {
-	let cfg = config::Config::parse();
-	println!("{cfg:?}");
-	println!("{:?}", cfg.addresses());
+fn main() -> ExitCode {
+	match service::start_service() {
+		Ok(_) => ExitCode::SUCCESS,
+		Err(e) => {
+			eprintln!("{e}");
+			ExitCode::FAILURE
+		}
+	}
 }
