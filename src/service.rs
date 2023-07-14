@@ -54,7 +54,7 @@ fn allow_email(input: &Input, addr_lst: &HashSet<KeyedAddress>) -> bool {
 	let address = input.get_coded_address();
 	for addr_k in addr_lst {
 		if addr_k == address {
-			return addr_k.check_code(&address);
+			return addr_k.check_code(address);
 		}
 	}
 	true
