@@ -1,9 +1,11 @@
+use crate::address::KeyedAddress;
 use anyhow::Result;
 use clap::Parser;
 use std::collections::HashSet;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::path::PathBuf;
+use std::str::FromStr;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -17,10 +19,10 @@ pub struct Config {
 }
 
 impl Config {
-	pub fn addresses(&self) -> Result<HashSet<String>> {
+	pub fn addresses(&self) -> Result<HashSet<KeyedAddress>> {
 		let mut addr_set = HashSet::new();
 		for addr in &self.address {
-			addr_set.insert(addr.to_string());
+			addr_set.insert(KeyedAddress::from_str(addr)?);
 		}
 		if let Some(path) = &self.address_file {
 			let f = File::open(path)?;
@@ -29,7 +31,7 @@ impl Config {
 				let line = line?;
 				let addr = line.trim();
 				if !addr.is_empty() && !addr.starts_with(crate::COMMENT_CHAR) {
-					addr_set.insert(addr.to_string());
+					addr_set.insert(KeyedAddress::from_str(addr)?);
 				}
 			}
 		}

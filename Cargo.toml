@@ -10,3 +10,4 @@ publish = false
 [dependencies]
 anyhow = { version = "1.0.71", default-features = false, features = ["std"] }
 clap = { version = "4.3.11", default-features = false, features = ["derive", "std"] }
+data-encoding = { version = "2.4.0", default-features = false, features = ["std"] }
