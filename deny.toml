@@ -83,7 +83,6 @@ ignore = [
     # - https://rustsec.org/advisories/RUSTSEC-2022-0090
     # - https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-35737
     # - https://nvd.nist.gov/vuln/detail/CVE-2022-35737
-    "RUSTSEC-2022-0090",
 ]
 # Threshold for security vulnerabilities, any vulnerability with a CVSS score
 # lower than the range specified will be ignored. Note that ignored advisories
@@ -113,7 +112,6 @@ unlicensed = "deny"
 allow = [
     "MIT",
     "Apache-2.0",
-    "BSD-3-Clause",
     "Unicode-DFS-2016",
 ]
 # List of explicitly disallowed licenses
