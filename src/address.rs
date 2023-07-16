@@ -16,8 +16,13 @@ impl FromStr for CodedAddress {
 
 	fn from_str(s: &str) -> Result<Self> {
 		let (local_part, domain) = split_local_part(s);
+		ensure!(!local_part.is_empty(), "{s}: local part cannot be empty");
+		if let Some(dom) = &domain {
+			ensure!(!dom.is_empty(), "{s}: domain cannot be empty");
+		}
 		let parts: Vec<&str> = local_part.split(crate::DEFAULT_SEPARATOR).collect();
 		let local_part = parts[0].to_string();
+		ensure!(!local_part.is_empty(), "{s}: local part cannot be empty");
 		let sub_addr = if parts.len() >= 2 {
 			Some(parts[1].to_string())
 		} else {
@@ -87,6 +92,10 @@ impl FromStr for KeyedAddress {
 		ensure!(ksplit.is_some(), "{s}: key separator not found");
 		let (address, key_b64) = ksplit.unwrap();
 		let (local_part, domain) = split_local_part(address);
+		ensure!(!local_part.is_empty(), "{s}: local part cannot be empty");
+		if let Some(dom) = &domain {
+			ensure!(!dom.is_empty(), "{s}: domain cannot be empty");
+		}
 		let key = BASE64.decode(key_b64.as_bytes())?;
 		ensure!(!key.is_empty(), "{s}: key cannot be empty");
 		Ok(Self {
@@ -108,6 +117,36 @@ fn split_local_part(s: &str) -> (String, Option<String>) {
 mod tests {
 	use super::{CodedAddress, KeyedAddress};
 	use std::str::FromStr;
+
+	#[test]
+	fn parse_coded_addr_empty_email() {
+		assert!(CodedAddress::from_str("").is_err());
+	}
+
+	#[test]
+	fn parse_coded_addr_empty_local() {
+		assert!(CodedAddress::from_str("@example.com").is_err());
+	}
+
+	#[test]
+	fn parse_coded_addr_empty_domain() {
+		assert!(CodedAddress::from_str("derp@").is_err());
+	}
+
+	#[test]
+	fn parse_keyed_addr_empty_email() {
+		assert!(KeyedAddress::from_str("").is_err());
+	}
+
+	#[test]
+	fn parse_keyed_addr_empty_local() {
+		assert!(KeyedAddress::from_str("@example.com").is_err());
+	}
+
+	#[test]
+	fn parse_keyed_addr_empty_domain() {
+		assert!(KeyedAddress::from_str("derp@").is_err());
+	}
 
 	#[test]
 	fn parse_valid_coded_addr_with_domain() {
