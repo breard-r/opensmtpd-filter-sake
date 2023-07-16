@@ -52,8 +52,7 @@ pub fn parse_input(input: &str) -> Result<Input> {
 
 #[cfg(test)]
 mod tests {
-	use super::{parse_input, Input};
-	use crate::address::CodedAddress;
+	use super::parse_input;
 
 	#[test]
 	fn test_valid_input() {
