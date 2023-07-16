@@ -17,7 +17,7 @@ pub struct Input {
 
 impl Input {
 	pub fn answer(&self, msg: &str) {
-		println!("filter‐result|{0}|{1}|{msg}", self.session_id, self.token);
+		println!("filter-result|{0}|{1}|{msg}", self.session_id, self.token);
 	}
 
 	pub fn get_coded_address(&self) -> &CodedAddress {
@@ -33,7 +33,7 @@ pub fn parse_input(input: &str) -> Result<Input> {
 	let _timestamp = next_param!(params_it)?;
 	let _subsystem = next_param!(params_it)?;
 	let filter = next_param!(params_it)?;
-	ensure!(filter == "rcpt‐to", "{filter}: invalid filter");
+	ensure!(filter == "rcpt-to", "{filter}: invalid filter");
 	let session_id = next_param!(params_it)?.to_string();
 	let token = next_param!(params_it)?.to_string();
 	let address = next_param!(params_it)?.trim_end();
