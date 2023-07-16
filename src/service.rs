@@ -1,27 +1,31 @@
 use crate::address::KeyedAddress;
 use crate::config::Config;
 use crate::input::{parse_input, Input};
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use clap::Parser;
 use std::collections::HashSet;
 use std::io;
 
-pub const BUFF_SIZE: usize = 4096;
-pub const CONFIG_END: &str = "config|ready\n";
+pub const CONFIG_END: &str = "config|ready";
 pub const ANSWER_OK: &str = "proceed";
 pub const ANSWER_ERR: &str = "reject|550 No such recipient here";
+
+macro_rules! next_line {
+	($it: ident) => {
+		$it.next()
+			.ok_or(anyhow!("standard input has been closed"))??
+	};
+}
 
 pub fn start_service() -> Result<()> {
 	let cfg = Config::parse();
 	let addresses = cfg.addresses()?;
-	let mut buffer = String::with_capacity(BUFF_SIZE);
-	let stdin = io::stdin();
+	let mut lines = io::stdin().lines();
 
 	// Handshake
 	loop {
-		buffer.clear();
-		stdin.read_line(&mut buffer)?;
-		if buffer == CONFIG_END {
+		let input = next_line!(lines);
+		if input.trim_end() == CONFIG_END {
 			break;
 		}
 	}
@@ -30,21 +34,19 @@ pub fn start_service() -> Result<()> {
 
 	// Input processing
 	loop {
-		buffer.clear();
-		stdin.read_line(&mut buffer)?;
-		if buffer.is_empty() {
-			continue;
-		}
-		match parse_input(&buffer, cfg.get_separator()) {
-			Ok(input) => {
-				if allow_email(&input, &addresses) {
-					input.answer(ANSWER_OK);
-				} else {
-					input.answer(ANSWER_ERR);
+		let input = next_line!(lines);
+		if !input.is_empty() {
+			match parse_input(&input, cfg.get_separator()) {
+				Ok(input) => {
+					if allow_email(&input, &addresses) {
+						input.answer(ANSWER_OK);
+					} else {
+						input.answer(ANSWER_ERR);
+					}
 				}
-			}
-			Err(e) => {
-				eprintln!("error: {e:#}");
+				Err(e) => {
+					eprintln!("error: {e:#}");
+				}
 			}
 		}
 	}
