@@ -11,16 +11,14 @@ pub struct CodedAddress {
 	domain: Option<String>,
 }
 
-impl FromStr for CodedAddress {
-	type Err = Error;
-
-	fn from_str(s: &str) -> Result<Self> {
+impl CodedAddress {
+	pub fn parse(s: &str, separator: char) -> Result<Self> {
 		let (local_part, domain) = split_local_part(s);
 		ensure!(!local_part.is_empty(), "{s}: local part cannot be empty");
 		if let Some(dom) = &domain {
 			ensure!(!dom.is_empty(), "{s}: domain cannot be empty");
 		}
-		let parts: Vec<&str> = local_part.split(crate::DEFAULT_SEPARATOR).collect();
+		let parts: Vec<&str> = local_part.split(separator).collect();
 		let local_part = parts[0].to_string();
 		ensure!(!local_part.is_empty(), "{s}: local part cannot be empty");
 		let sub_addr = if parts.len() >= 2 {
@@ -120,17 +118,17 @@ mod tests {
 
 	#[test]
 	fn parse_coded_addr_empty_email() {
-		assert!(CodedAddress::from_str("").is_err());
+		assert!(CodedAddress::parse("", '+').is_err());
 	}
 
 	#[test]
 	fn parse_coded_addr_empty_local() {
-		assert!(CodedAddress::from_str("@example.com").is_err());
+		assert!(CodedAddress::parse("@example.com", '+').is_err());
 	}
 
 	#[test]
 	fn parse_coded_addr_empty_domain() {
-		assert!(CodedAddress::from_str("derp@").is_err());
+		assert!(CodedAddress::parse("derp@", '+').is_err());
 	}
 
 	#[test]
@@ -151,7 +149,7 @@ mod tests {
 	#[test]
 	fn parse_valid_coded_addr_with_domain() {
 		let addr_str = "a+test+orsxg5a@example.org";
-		let addr = CodedAddress::from_str(addr_str);
+		let addr = CodedAddress::parse(addr_str, '+');
 		assert!(addr.is_ok(), "unable to parse {addr_str}: {addr:?}");
 		let addr = addr.unwrap();
 		assert_eq!(addr.local_part, "a");
@@ -163,7 +161,7 @@ mod tests {
 	#[test]
 	fn parse_valid_coded_addr_without_domain() {
 		let addr_str = "local.part+test+orsxg5a";
-		let addr = CodedAddress::from_str(addr_str);
+		let addr = CodedAddress::parse(addr_str, '+');
 		assert!(addr.is_ok(), "unable to parse {addr_str}: {addr:?}");
 		let addr = addr.unwrap();
 		assert_eq!(addr.local_part, "local.part");
@@ -173,9 +171,21 @@ mod tests {
 	}
 
 	#[test]
+	fn parse_valid_coded_addr_alt_sep() {
+		let addr_str = "local-part.test.orsxg5a@example.org";
+		let addr = CodedAddress::parse(addr_str, '.');
+		assert!(addr.is_ok(), "unable to parse {addr_str}: {addr:?}");
+		let addr = addr.unwrap();
+		assert_eq!(addr.local_part, "local-part");
+		assert_eq!(addr.sub_addr, Some("test".to_string()));
+		assert_eq!(addr.code, b"test");
+		assert_eq!(addr.domain, Some("example.org".to_string()));
+	}
+
+	#[test]
 	fn parse_valid_coded_addr_without_sub_addr() {
 		let addr_str = "local.part@example.org";
-		let addr = CodedAddress::from_str(addr_str);
+		let addr = CodedAddress::parse(addr_str, '+');
 		assert!(addr.is_ok(), "unable to parse {addr_str}: {addr:?}");
 		let addr = addr.unwrap();
 		assert_eq!(addr.local_part, "local.part");
@@ -232,29 +242,29 @@ mod tests {
 
 	#[test]
 	fn cmp_coded_addr_with_domain_eq() {
-		let addr_1 = CodedAddress::from_str("test+test+orsxg5a@example.org").unwrap();
-		let addr_2 = CodedAddress::from_str("test+test+orsxg5a@example.org").unwrap();
+		let addr_1 = CodedAddress::parse("test+test+orsxg5a@example.org", '+').unwrap();
+		let addr_2 = CodedAddress::parse("test+test+orsxg5a@example.org", '+').unwrap();
 		assert_eq!(addr_1, addr_2);
 	}
 
 	#[test]
 	fn cmp_coded_addr_without_domain_eq() {
-		let addr_1 = CodedAddress::from_str("test+test+orsxg5a").unwrap();
-		let addr_2 = CodedAddress::from_str("test+test+orsxg5a").unwrap();
+		let addr_1 = CodedAddress::parse("test+test+orsxg5a", '+').unwrap();
+		let addr_2 = CodedAddress::parse("test+test+orsxg5a", '+').unwrap();
 		assert_eq!(addr_1, addr_2);
 	}
 
 	#[test]
 	fn cmp_coded_addr_with_domain_ne() {
-		let addr_1 = CodedAddress::from_str("test+test+orsxg5a@example.org").unwrap();
-		let addr_2 = CodedAddress::from_str("test2+test+orsxg5a@example.org").unwrap();
+		let addr_1 = CodedAddress::parse("test+test+orsxg5a@example.org", '+').unwrap();
+		let addr_2 = CodedAddress::parse("test2+test+orsxg5a@example.org", '+').unwrap();
 		assert_ne!(addr_1, addr_2);
 	}
 
 	#[test]
 	fn cmp_coded_addr_without_domain_ne() {
-		let addr_1 = CodedAddress::from_str("test+test+orsxg5a").unwrap();
-		let addr_2 = CodedAddress::from_str("test2+test+orsxg5a").unwrap();
+		let addr_1 = CodedAddress::parse("test+test+orsxg5a", '+').unwrap();
+		let addr_2 = CodedAddress::parse("test2+test+orsxg5a", '+').unwrap();
 		assert_ne!(addr_1, addr_2);
 	}
 
@@ -289,35 +299,35 @@ mod tests {
 	#[test]
 	fn cmp_addr_types_with_domain_eq() {
 		let addr_1 = KeyedAddress::from_str("test@example.org:3d74YQqk").unwrap();
-		let addr_2 = CodedAddress::from_str("test+test+orsxg5a@example.org").unwrap();
+		let addr_2 = CodedAddress::parse("test+test+orsxg5a@example.org", '+').unwrap();
 		assert_eq!(addr_1, addr_2);
 	}
 
 	#[test]
 	fn cmp_addr_types_without_domain_eq() {
 		let addr_1 = KeyedAddress::from_str("test:3d74YQqk").unwrap();
-		let addr_2 = CodedAddress::from_str("test+test+orsxg5a").unwrap();
+		let addr_2 = CodedAddress::parse("test+test+orsxg5a", '+').unwrap();
 		assert_eq!(addr_1, addr_2);
 	}
 
 	#[test]
 	fn cmp_addr_types_without_sub_addr() {
 		let addr_1 = KeyedAddress::from_str("test@example.org:3d74YQqk").unwrap();
-		let addr_2 = CodedAddress::from_str("test@example.org").unwrap();
+		let addr_2 = CodedAddress::parse("test@example.org", '+').unwrap();
 		assert_eq!(addr_1, addr_2);
 	}
 
 	#[test]
 	fn cmp_addr_types_with_domain_ne() {
 		let addr_1 = KeyedAddress::from_str("test@example.org:3d74YQqk").unwrap();
-		let addr_2 = CodedAddress::from_str("test+test+orsxg5a@example.com").unwrap();
+		let addr_2 = CodedAddress::parse("test+test+orsxg5a@example.com", '+').unwrap();
 		assert_ne!(addr_1, addr_2);
 	}
 
 	#[test]
 	fn cmp_addr_types_without_domain_ne() {
 		let addr_1 = KeyedAddress::from_str("test:3d74YQqk").unwrap();
-		let addr_2 = CodedAddress::from_str("test2+test+orsxg5a").unwrap();
+		let addr_2 = CodedAddress::parse("test2+test+orsxg5a", '+').unwrap();
 		assert_ne!(addr_1, addr_2);
 	}
 }

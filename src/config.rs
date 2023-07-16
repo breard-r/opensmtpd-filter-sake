@@ -37,4 +37,8 @@ impl Config {
 		}
 		Ok(addr_set)
 	}
+
+	pub fn get_separator(&self) -> char {
+		self.separator
+	}
 }

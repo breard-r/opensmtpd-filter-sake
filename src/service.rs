@@ -35,7 +35,7 @@ pub fn start_service() -> Result<()> {
 		if buffer.is_empty() {
 			continue;
 		}
-		match parse_input(&buffer) {
+		match parse_input(&buffer, cfg.get_separator()) {
 			Ok(input) => {
 				if allow_email(&input, &addresses) {
 					input.answer(ANSWER_OK);
@@ -71,7 +71,7 @@ mod tests {
 	fn run_test_with_addr(address: &str) -> bool {
 		// Preparing the input
 		let input_str = format!("filter|0.5|1576146008.006099|smtp-in|rcpt-to|7641df9771b4ed00|1ef1c203cc576e5d|{address}");
-		let input = parse_input(&input_str);
+		let input = parse_input(&input_str, '+');
 		assert!(input.is_ok());
 		let input = input.unwrap();
 
