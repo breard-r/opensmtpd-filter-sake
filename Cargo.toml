@@ -1,5 +1,5 @@
 [package]
-name = "opensmtpd-filter-sake"
+name = "filter-sake"
 version = "0.1.0"
 authors = ["Rodolphe Bréard <rodolphe@what.tf>"]
 edition = "2021"
