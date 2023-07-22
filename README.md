@@ -31,6 +31,54 @@ cargo build --release
 The executable should be located in the `./target/release/` directory.
 
 
+## Usage
+
+The filter accepts the following options:
+
+- `--address` or `-a`: specify an address where the filter will enforce the presence of a valid verification code (see below for the format)
+- `--address-file` or `-A`: the path to a file where each line is an address as specified in `--address`
+- `--separator` or `-s`: set the sub-address delimiter character (default: `+`) : this must match the character defined in `smtpd.conf` using `smtp sub-addr-delim`
+
+An address must be composed of the following elements:
+- the local part
+- (optional) an `@` followed by a domain name
+- the `:` character
+- the private key in base64 (with padding)
+
+Specifying a domain name configures the filter to match addresses on both the local part and the specified domain name. If no domain name is specified, the match will be on the local part only, and therefore all domain names will be accepted.
+
+The `--address` option may be specified multiples times and can also be combined with `--address-file`.
+
+In an address file, empty lines and lines starting with the `#` character are ignored.
+
+To generate a private key, it is recommended to use the following command:
+
+```
+openssl rand -base64 16
+```
+
+Example configuration:
+
+```
+# Sub-addresses
+smtp sub-addr-delim "+"
+filter "sake" proc-exec "filter-sake -s '+' -a 'a@example.org:11voiefK5PgCX5F1TTcuoQ==' -a 'b:3pUdigGQNXYBeKJdYDdERQ=='"
+
+# Tables
+table domains { "example.org", "example.com" }
+table vusers { "test" = "1000:100:/var/vmail/test", "b" = "1000:100:/var/vmail/b" }
+table aliases { "a" = "test" }
+
+# Listening
+listen on 127.0.0.1 hostname localhost filter "sake"
+listen on ::1 hostname localhost filter "sake"
+
+# Delivering
+action "deliver" maildir userbase <vusers> alias <aliases>
+match from any for domain <domains> action "deliver"
+```
+
+
 ## Code generation protocol
 
 Let start with some definition. For this protocol, an email address is composed of a local part, a sub-address delimiter, a sub-address, another sub-address delimiter, the validation code, the at sign and the domain name. For instance, for the address `darra.service.gizti5lj@mail.example.org`:
