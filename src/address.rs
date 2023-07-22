@@ -27,7 +27,9 @@ impl CodedAddress {
 			None
 		};
 		let code = if parts.len() >= 3 {
-			BASE32_NOPAD.decode(parts[2].to_uppercase().as_bytes())?
+			BASE32_NOPAD
+				.decode(parts[2].to_uppercase().as_bytes())
+				.unwrap_or(Vec::new())
 		} else {
 			Vec::new()
 		};
@@ -155,6 +157,18 @@ mod tests {
 		assert_eq!(addr.local_part, "a");
 		assert_eq!(addr.sub_addr, Some("test".to_string()));
 		assert_eq!(addr.code, b"test");
+		assert_eq!(addr.domain, Some("example.org".to_string()));
+	}
+
+	#[test]
+	fn parse_valid_coded_addr_with_invalid_base32() {
+		let addr_str = "a+test+invalid@example.org";
+		let addr = CodedAddress::parse(addr_str, '+');
+		assert!(addr.is_ok(), "unable to parse {addr_str}: {addr:?}");
+		let addr = addr.unwrap();
+		assert_eq!(addr.local_part, "a");
+		assert_eq!(addr.sub_addr, Some("test".to_string()));
+		assert_eq!(addr.code, Vec::new());
 		assert_eq!(addr.domain, Some("example.org".to_string()));
 	}
 
