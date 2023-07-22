@@ -41,7 +41,7 @@ def get_filter_path(test_dir, target):
 def get_opensmtpd_config(port, filter_exe, maildir_path):
     cfg_content = f"""# OpenSMTPD test configuration
 
-# DKIM filter
+# Sub-addresses
 filter "sake" proc-exec "{filter_exe} --address 'a@example.org:11voiefK5PgCX5F1TTcuoQ==' --address 'b:11voiefK5PgCX5F1TTcuoQ=='"
 
 # Tables
