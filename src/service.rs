@@ -95,15 +95,13 @@ mod tests {
 	}
 
 	#[test]
-	#[ignore]
 	fn test_valid_code_domain() {
-		assert!(run_test_with_addr("a+test+TODO@example.org"));
+		assert!(run_test_with_addr("a+test+pxmnoheo@example.org"));
 	}
 
 	#[test]
-	#[ignore]
 	fn test_valid_code_no_domain() {
-		assert!(run_test_with_addr("b+test+TODO@example.org"));
+		assert!(run_test_with_addr("b+test+uivojtoa@example.org"));
 	}
 
 	#[test]

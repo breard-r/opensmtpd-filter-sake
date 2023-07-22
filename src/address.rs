@@ -1,3 +1,4 @@
+use crate::code::generate_code;
 use anyhow::{ensure, Error, Result};
 use data_encoding::{BASE32_NOPAD, BASE64};
 use std::hash::{Hash, Hasher};
@@ -9,6 +10,7 @@ pub struct CodedAddress {
 	sub_addr: Option<String>,
 	code: Vec<u8>,
 	domain: Option<String>,
+	separator: char,
 }
 
 impl CodedAddress {
@@ -38,6 +40,7 @@ impl CodedAddress {
 			sub_addr,
 			code,
 			domain,
+			separator,
 		})
 	}
 }
@@ -51,8 +54,20 @@ pub struct KeyedAddress {
 
 impl KeyedAddress {
 	pub fn check_code(&self, addr: &CodedAddress) -> bool {
-		// TODO
-		false
+		if addr.local_part.is_empty() || self.key.is_empty() {
+			return false;
+		}
+		match &addr.sub_addr {
+			Some(sub_addr) => {
+				if !sub_addr.is_empty() {
+					addr.code
+						== generate_code(&addr.local_part, addr.separator, sub_addr, &self.key)
+				} else {
+					false
+				}
+			}
+			None => false,
+		}
 	}
 }
 

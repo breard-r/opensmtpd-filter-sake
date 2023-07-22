@@ -1,6 +1,7 @@
 use std::process::ExitCode;
 
 mod address;
+mod code;
 mod config;
 mod input;
 mod service;

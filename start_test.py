@@ -122,8 +122,12 @@ def get_maildir():
 def start_tests(test_dir, smtp_port):
     to_addrs = [
         ("test@example.org", True),
-        ("test@nope.example.org", False),
         ("a@example.com", True),
+        ("a+anything@example.com", True),
+        ("a+anything+test@example.com", True),
+        ("a+test+pxmnoheo@example.org", True),
+        ("b+test+uivojtoa@example.org", True),
+        ("test@nope.example.org", False),
         ("a@example.org", False),
         ("a+invalid@example.org", False),
         ("a+invalid+input@example.org", False),
