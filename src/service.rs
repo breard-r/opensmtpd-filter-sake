@@ -29,7 +29,7 @@ pub fn start_service() -> Result<()> {
 			break;
 		}
 	}
-	println!("register|filter|smtp‐in|rcpt‐to");
+	println!("register|filter|smtp-in|rcpt-to");
 	println!("register|ready");
 
 	// Input processing
