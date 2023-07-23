@@ -28,17 +28,15 @@ self.addEventListener('fetch', (event) => {
 		return;
 	}
 
-	event.respondWith((async () => {
+	event.respondWith(caches.open(cache_name).then((cache) => {
 		log_message(`Fetching resource: ${event.request.url}`);
-		const cache_promise = await caches.match(event.request);
-		if (cache_promise) {
-			log_message(`Resource retrieved from cache: ${event.request.url}`);
-			return cache_promise;
-		}
-		const fetch_promise = await fetch(event.request);
-		const cache = await caches.open(cache_name);
-		log_message(`Caching new resource: ${event.request.url}`);
-		cache.put(event.request, fetch_promise.clone());
-		return fetch_promise;
-	})());
+		return cache.match(event.request).then((cached_response) => {
+			const fetched_response = fetch(event.request).then((network_response) => {
+				log_message(`Caching resource: ${event.request.url}`);
+				cache.put(event.request, network_response.clone());
+				return network_response;
+			});
+			return cached_response || fetched_response;
+		});
+	}));
 });
