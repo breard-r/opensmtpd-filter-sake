@@ -1,6 +1,7 @@
 const sw_version = '0.1.0';
 const cache_name = `sake-v${sw_version}`;
 const cached_files = [
+	'/',
 	'/app.js',
 	'/index.html',
 	'/vendor/base32.min.js',
