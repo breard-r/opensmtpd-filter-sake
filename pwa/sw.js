@@ -22,6 +22,23 @@ self.addEventListener('install', (event) => {
 	}));
 });
 
+self.addEventListener('activate', (e) => {
+	e.waitUntil(
+		caches.keys().then((keyList) =>
+			Promise.all(
+				keyList.map((key) => {
+					if (key != cache_name) {
+						log_message(`Cleaning cache: ${key}`);
+						return caches.delete(key);
+					}
+				}),
+			),
+		),
+	);
+	e.waitUntil(clients.claim());
+	log_message('Active');
+});
+
 self.addEventListener('fetch', (event) => {
 	if (!(event.request.url.startsWith('https:') || event.request.url.startsWith('http:'))) {
 		log_message(`Fetching resource failed: invalid protocol: ${event.request.url}`);
