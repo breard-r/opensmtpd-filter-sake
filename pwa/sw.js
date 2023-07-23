@@ -13,32 +13,32 @@ function log_message(msg) {
 	console.log(`[Service Worker] v${sw_version}: ${msg}`);
 }
 
-self.addEventListener('install', (e) => {
+self.addEventListener('install', (event) => {
 	log_message('Installed');
 	self.skipWaiting();
-	e.waitUntil(caches.open(cache_name).then((cache) => {
+	event.waitUntil(caches.open(cache_name).then((cache) => {
 		log_message('Caching all');
 		return cache.addAll(cached_files);
 	}));
 });
 
-self.addEventListener('fetch', (e) => {
-	if (!(e.request.url.startsWith('https:') || e.request.url.startsWith('http:'))) {
-		log_message(`Fetching resource failed: invalid protocol: ${e.request.url}`);
+self.addEventListener('fetch', (event) => {
+	if (!(event.request.url.startsWith('https:') || event.request.url.startsWith('http:'))) {
+		log_message(`Fetching resource failed: invalid protocol: ${event.request.url}`);
 		return;
 	}
 
-	e.respondWith((async () => {
-		log_message(`Fetching resource: ${e.request.url}`);
-		const cache_promise = await caches.match(e.request);
+	event.respondWith((async () => {
+		log_message(`Fetching resource: ${event.request.url}`);
+		const cache_promise = await caches.match(event.request);
 		if (cache_promise) {
-			log_message(`Resource retrieved from cache: ${e.request.url}`);
+			log_message(`Resource retrieved from cache: ${event.request.url}`);
 			return cache_promise;
 		}
-		const fetch_promise = await fetch(e.request);
+		const fetch_promise = await fetch(event.request);
 		const cache = await caches.open(cache_name);
-		log_message(`Caching new resource: ${e.request.url}`);
-		cache.put(e.request, fetch_promise.clone());
+		log_message(`Caching new resource: ${event.request.url}`);
+		cache.put(event.request, fetch_promise.clone());
 		return fetch_promise;
 	})());
 });
