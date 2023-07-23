@@ -37,7 +37,7 @@ class KeyedAddress {
 
 ['a', 'b'].forEach((e) => {
 	const test_addr = new KeyedAddress(e, '+', 'example.org', '11voiefK5PgCX5F1TTcuoQ==');
-	console.log(test1);
+	console.log(test_addr);
 	console.log('Sub-addr: ' + test_addr.genSubAddr('test'));
 });
 
