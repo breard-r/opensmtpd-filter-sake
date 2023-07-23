@@ -14,12 +14,12 @@ function log_message(msg) {
 }
 
 self.addEventListener('install', (e) => {
-	log_message('Install');
-	e.waitUntil((async () => {
-		const cache = await caches.open(cache_name);
+	log_message('Installed');
+	self.skipWaiting();
+	e.waitUntil(caches.open(cache_name).then((cache) => {
 		log_message('Caching all');
-		await cache.addAll(cached_files);
-	})());
+		return cache.addAll(cached_files);
+	}));
 });
 
 self.addEventListener('fetch', (e) => {
