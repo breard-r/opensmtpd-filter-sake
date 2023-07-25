@@ -26,6 +26,9 @@
 									</div>
 								</div>
 								<p class="control">
+								<a class="button is-danger js-modal-trigger" data-target="modal-del-account" id="btn-del-account">Delete</a>
+								</p>
+								<p class="control">
 								<a class="button is-primary js-modal-trigger" data-target="modal-add-account" id="btn-add-account">New</a>
 								</p>
 							</div>
@@ -86,6 +89,24 @@
 				</section>
 				<footer class="modal-card-foot buttons is-centered">
 					<button class="button is-success" id="btn-new-account">Add</button>
+					<button class="button button-close">Cancel</button>
+				</footer>
+			</div>
+		</div>
+		<div id="modal-del-account" class="modal">
+			<div class="modal-background"></div>
+			<div class="modal-card">
+				<header class="modal-card-head">
+					<p class="modal-card-title">Delete account</p>
+					<button class="delete" aria-label="close"></button>
+				</header>
+				<section class="modal-card-body">
+					<p>You are about to delete the following account:</p>
+					<p id="del-account-name"></p>
+					<p>Are you sure?</p>
+				</section>
+				<footer class="modal-card-foot buttons is-centered">
+					<button class="button is-danger" id="btn-del-account-confirm">Delete</button>
 					<button class="button button-close">Cancel</button>
 				</footer>
 			</div>

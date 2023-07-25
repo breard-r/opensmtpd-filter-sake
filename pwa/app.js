@@ -50,6 +50,9 @@ class Account {
 document.addEventListener('DOMContentLoaded', () => {
 	// Functions to open and close a modal
 	function openModal(el) {
+		if (el.id === 'modal-del-account') {
+			document.querySelector('#del-account-name').innerHTML = getSelectedAccountName();
+		}
 		el.classList.add('is-active');
 	}
 
@@ -68,6 +71,11 @@ document.addEventListener('DOMContentLoaded', () => {
 		(document.querySelectorAll('.modal') || []).forEach((modal) => {
 			closeModal(modal);
 		});
+	}
+
+	// Function to get the name of the currently selected account
+	function getSelectedAccountName() {
+		return document.querySelector('#account-name').value;
 	}
 
 	// Function to get an account by its name
@@ -128,6 +136,15 @@ document.addEventListener('DOMContentLoaded', () => {
 		if (event.code === 'Escape') {
 			closeAllModals();
 		}
+	});
+
+	// Add a click event on the delete account button to display the confirmation message
+	document.querySelector('#btn-del-account-confirm').addEventListener('click', (event) => {
+		const account_name = getSelectedAccountName();
+		localStorage.removeItem(account_name);
+		console.log(`Account ${account_name} deleted.`);
+		syncAccountList();
+		closeAllModals();
 	});
 
 	// Add a click event on the new account button to register the new account
