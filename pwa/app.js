@@ -142,6 +142,10 @@ document.addEventListener('DOMContentLoaded', () => {
 		console.log(new_account);
 		new_account.register();
 		console.log(`Account ${new_account.getName()} added.`);
+		['#new-addr-local-part', '#new-addr-domain', '#new-addr-key'].forEach((selector) => {
+			document.querySelector(selector).value = '';
+		});
+		document.querySelector('#new-addr-separator').value = '+';
 		syncAccountList();
 		closeAllModals();
 	});
