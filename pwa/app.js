@@ -175,6 +175,13 @@ document.addEventListener('DOMContentLoaded', () => {
 		document.querySelector('#generated-addr').value = new_address;
 		console.log(`New sub-address for account ${account.getName()}: ${new_address}`);
 	});
+
+	// Add a change event on the main form to remove previously generated address
+	['#account-name', '#sub-addr-name'].forEach((selector) => {
+		document.querySelector(selector).addEventListener('change', () => {
+			document.querySelector('#generated-addr').value = '';
+		});
+	});
 });
 
 window.addEventListener('load', () => {
