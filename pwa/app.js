@@ -15,11 +15,15 @@ function base64_decode(str_b64) {
 }
 
 class Account {
-	constructor(local_part, separator, domain, key_b64) {
+	constructor(local_part, separator, domain, key) {
 		this.local_part = local_part;
 		this.domain = domain;
 		this.separator = separator;
-		this.key = base64_decode(key_b64);
+		if (Array.isArray(key)) {
+			this.key = key;
+		} else {
+			this.key = base64_decode(key);
+		}
 	}
 
 	getName() {
@@ -37,22 +41,90 @@ class Account {
 		const code = base32_nopad_encode(reduced_hash);
 		return `${this.local_part}${this.separator}${sub_addr_name}${this.separator}${code}@${this.domain}`
 	}
+
+	register() {
+		localStorage.setItem(this.getName(), JSON.stringify(this));
+	}
 }
 
-['a', 'b'].forEach((e) => {
-	const test_addr = new Account(e, '+', 'example.org', '11voiefK5PgCX5F1TTcuoQ==');
-	console.log(test_addr);
-	console.log('Account name: ' + test_addr.getName());
-	console.log('Sub-addr: ' + test_addr.genSubAddr('test'));
-});
+document.addEventListener('DOMContentLoaded', () => {
+	// Functions to open and close a modal
+	function openModal() {
+		document.querySelector('#modal-add-account').classList.add('is-active');
+	}
 
-document.querySelector('#btn-generate').addEventListener('click', (event) => {
-	event.preventDefault();
-	console.log('TODO: address generation');
-	['a', 'b'].forEach((e) => {
-		const test_addr = new Account(e, '+', 'example.org', '11voiefK5PgCX5F1TTcuoQ==');
-		console.log(test_addr);
-		console.log('Sub-addr: ' + test_addr.genSubAddr('test'));
+	function closeModal() {
+		if (localStorage.length !== 0) {
+			document.querySelector('#modal-add-account').classList.remove('is-active');
+			syncAccountList();
+		}
+	}
+
+	// Function to synchronize the account list
+	function syncAccountList() {
+		var acc_list = document.querySelector('#account-name');
+		while (acc_list.lastElementChild) {
+			acc_list.removeChild(acc_list.lastElementChild);
+		}
+		for (var i = 0, len = localStorage.length; i < len; ++i) {
+			const account_string = localStorage.getItem(localStorage.key(i));
+			const account_raw = JSON.parse(account_string);
+			const account = new Account(
+				account_raw.local_part,
+				account_raw.separator,
+				account_raw.domain,
+				account_raw.key,
+			);
+			const new_elem = new Option(account.getName(), account.getName());
+			acc_list.appendChild(new_elem);
+		}
+		if (localStorage.length === 0) {
+			openModal();
+		}
+	}
+	syncAccountList();
+
+	// Add a click event on buttons to open a specific modal
+	(document.querySelectorAll('.js-modal-trigger') || []).forEach(($trigger) => {
+		$trigger.addEventListener('click', () => {
+			openModal();
+		});
+	});
+
+	// Add a click event on various child elements to close the parent modal
+	(document.querySelectorAll('.modal-background, .modal-close, .modal-card-head .delete, .modal-card-foot .button-close') || []).forEach(($close) => {
+		$close.addEventListener('click', () => {
+			closeModal();
+		});
+	});
+
+	// Add a keyboard event to close all modals
+	document.addEventListener('keydown', (event) => {
+		if (event.code === 'Escape') {
+			closeModal();
+		}
+	});
+
+	// Add a click event on the new account button to register the new account
+	document.querySelector('#btn-new-account').addEventListener('click', (event) => {
+		console.log('Adding new account…');
+		const new_account = new Account(
+			document.querySelector('#new-addr-local-part').value,
+			document.querySelector('#new-addr-separator').value,
+			document.querySelector('#new-addr-domain').value,
+			document.querySelector('#new-addr-key').value,
+		);
+		console.log(new_account);
+		new_account.register();
+		console.log(`Account ${new_account.getName()} added.`);
+		closeModal();
+	});
+
+	// Add a click event on the new address button to generate it
+	document.querySelector('#btn-generate').addEventListener('click', (event) => {
+		console.log('Generating a new address…');
+		event.preventDefault();
+		// TODO
 	});
 });
 
