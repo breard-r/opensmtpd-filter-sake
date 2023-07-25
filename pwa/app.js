@@ -49,15 +49,25 @@ class Account {
 
 document.addEventListener('DOMContentLoaded', () => {
 	// Functions to open and close a modal
-	function openModal() {
-		document.querySelector('#modal-add-account').classList.add('is-active');
+	function openModal(el) {
+		el.classList.add('is-active');
 	}
 
-	function closeModal() {
-		if (localStorage.length !== 0) {
-			document.querySelector('#modal-add-account').classList.remove('is-active');
-			syncAccountList();
+	function openNewAccountModal(el) {
+		const new_account_modal = document.querySelector('#modal-add-account');
+		openModal(new_account_modal);
+	}
+
+	function closeModal(el) {
+		if (!(el.id === 'modal-add-account' && localStorage.length === 0)) {
+			el.classList.remove('is-active');
 		}
+	}
+
+	function closeAllModals() {
+		(document.querySelectorAll('.modal') || []).forEach((modal) => {
+			closeModal(modal);
+		});
 	}
 
 	// Function to synchronize the account list
@@ -79,29 +89,34 @@ document.addEventListener('DOMContentLoaded', () => {
 			acc_list.appendChild(new_elem);
 		}
 		if (localStorage.length === 0) {
-			openModal();
+			openNewAccountModal();
 		}
 	}
 	syncAccountList();
 
 	// Add a click event on buttons to open a specific modal
-	(document.querySelectorAll('.js-modal-trigger') || []).forEach(($trigger) => {
-		$trigger.addEventListener('click', () => {
-			openModal();
+	(document.querySelectorAll('.js-modal-trigger') || []).forEach((trigger) => {
+		const modal = trigger.dataset.target;
+		const target = document.getElementById(modal);
+
+		trigger.addEventListener('click', () => {
+			openModal(target);
 		});
 	});
 
 	// Add a click event on various child elements to close the parent modal
-	(document.querySelectorAll('.modal-background, .modal-close, .modal-card-head .delete, .modal-card-foot .button-close') || []).forEach(($close) => {
-		$close.addEventListener('click', () => {
-			closeModal();
+	(document.querySelectorAll('.modal-background, .modal-close, .modal-card-head .delete, .modal-card-foot .button-close') || []).forEach((close) => {
+		const target = close.closest('.modal');
+
+		close.addEventListener('click', () => {
+			closeModal(target);
 		});
 	});
 
 	// Add a keyboard event to close all modals
 	document.addEventListener('keydown', (event) => {
 		if (event.code === 'Escape') {
-			closeModal();
+			closeAllModals();
 		}
 	});
 
@@ -117,7 +132,8 @@ document.addEventListener('DOMContentLoaded', () => {
 		console.log(new_account);
 		new_account.register();
 		console.log(`Account ${new_account.getName()} added.`);
-		closeModal();
+		syncAccountList();
+		closeAllModals();
 	});
 
 	// Add a click event on the new address button to generate it
