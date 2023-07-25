@@ -46,6 +46,16 @@ class Account {
 	console.log('Sub-addr: ' + test_addr.genSubAddr('test'));
 });
 
+document.querySelector('#btn-generate').addEventListener('click', (event) => {
+	event.preventDefault();
+	console.log('TODO: address generation');
+	['a', 'b'].forEach((e) => {
+		const test_addr = new Account(e, '+', 'example.org', '11voiefK5PgCX5F1TTcuoQ==');
+		console.log(test_addr);
+		console.log('Sub-addr: ' + test_addr.genSubAddr('test'));
+	});
+});
+
 window.addEventListener('load', () => {
 	if ('serviceWorker' in navigator) {
 		navigator.serviceWorker.register('/sw.js');
