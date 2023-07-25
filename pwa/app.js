@@ -148,9 +148,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	// Add a click event on the new address button to generate it
 	document.querySelector('#btn-generate').addEventListener('click', (event) => {
-		console.log('Generating a new address…');
 		event.preventDefault();
-		// TODO
+		const account = getAccountByName(document.querySelector('#account-name').value);
+		const new_address = account.genSubAddr(document.querySelector('#sub-addr-name').value);
+		document.querySelector('#generated-addr').value = new_address;
+		console.log(`New sub-address for account ${account.getName()}: ${new_address}`);
 	});
 });
 
