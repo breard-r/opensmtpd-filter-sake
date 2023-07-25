@@ -93,7 +93,7 @@ def start_opensmtpd(cfg_path):
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
     )
-    time.sleep(5)
+    time.sleep(8)
     return p.pid
 
 
