@@ -70,21 +70,31 @@ document.addEventListener('DOMContentLoaded', () => {
 		});
 	}
 
+	// Function to get an account by its name
+	function getAccountByName(name) {
+		const account_string = localStorage.getItem(name);
+		const account_raw = JSON.parse(account_string);
+		return new Account(
+			account_raw.local_part,
+			account_raw.separator,
+			account_raw.domain,
+			account_raw.key,
+		);
+	}
+
 	// Function to synchronize the account list
 	function syncAccountList() {
 		var acc_list = document.querySelector('#account-name');
 		while (acc_list.lastElementChild) {
 			acc_list.removeChild(acc_list.lastElementChild);
 		}
+		var account_names = [];
 		for (var i = 0, len = localStorage.length; i < len; ++i) {
-			const account_string = localStorage.getItem(localStorage.key(i));
-			const account_raw = JSON.parse(account_string);
-			const account = new Account(
-				account_raw.local_part,
-				account_raw.separator,
-				account_raw.domain,
-				account_raw.key,
-			);
+			account_names.push(localStorage.key(i));
+		}
+		account_names.sort();
+		for (const name of account_names) {
+			const account = getAccountByName(name);
 			const new_elem = new Option(account.getName(), account.getName());
 			acc_list.appendChild(new_elem);
 		}
