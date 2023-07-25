@@ -22,6 +22,10 @@ class KeyedAddress {
 		this.key = base64_decode(key_b64);
 	}
 
+	getName() {
+		return `${this.local_part}@${this.domain}`;
+	}
+
 	genSubAddr(sub_addr_name) {
 		var hasher = sha256.hmac.create(this.key);
 		hasher.update(this.local_part);
@@ -38,6 +42,7 @@ class KeyedAddress {
 ['a', 'b'].forEach((e) => {
 	const test_addr = new KeyedAddress(e, '+', 'example.org', '11voiefK5PgCX5F1TTcuoQ==');
 	console.log(test_addr);
+	console.log('Account name: ' + test_addr.getName());
 	console.log('Sub-addr: ' + test_addr.genSubAddr('test'));
 });
 
