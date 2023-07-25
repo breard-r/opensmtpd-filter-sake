@@ -14,7 +14,7 @@ function base64_decode(str_b64) {
 	return b;
 }
 
-class KeyedAddress {
+class Account {
 	constructor(local_part, separator, domain, key_b64) {
 		this.local_part = local_part;
 		this.domain = domain;
@@ -40,7 +40,7 @@ class KeyedAddress {
 }
 
 ['a', 'b'].forEach((e) => {
-	const test_addr = new KeyedAddress(e, '+', 'example.org', '11voiefK5PgCX5F1TTcuoQ==');
+	const test_addr = new Account(e, '+', 'example.org', '11voiefK5PgCX5F1TTcuoQ==');
 	console.log(test_addr);
 	console.log('Account name: ' + test_addr.getName());
 	console.log('Sub-addr: ' + test_addr.genSubAddr('test'));
