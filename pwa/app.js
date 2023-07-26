@@ -14,15 +14,50 @@ function base64_decode(str_b64) {
 	return b;
 }
 
+class AccountValueError extends Error {
+	constructor(field_id, ...params) {
+		super(...params);
+		if (Error.captureStackTrace) {
+			Error.captureStackTrace(this, AccountValueError);
+		}
+		this.name = "AccountValueError";
+		this.field_id = field_id;
+	}
+}
+
 class Account {
 	constructor(local_part, separator, domain, key) {
+		// Set the local part
+		if (!local_part) {
+			throw new AccountValueError("new-addr-local-part", "The local part cannot be empty.");
+		}
 		this.local_part = local_part;
-		this.domain = domain;
+
+		// Set the separator
+		if (!separator || separator.length !== 1) {
+			throw new AccountValueError("new-addr-separator", "The separator must be a single character.");
+		}
 		this.separator = separator;
+
+		// Set the domain name
+		if (!domain) {
+			throw new AccountValueError("new-addr-domain", "The domain cannot be empty.");
+		}
+		this.domain = domain;
+
+		// Set the private key
 		if (Array.isArray(key)) {
 			this.key = key;
 		} else {
-			this.key = base64_decode(key);
+			try {
+				this.key = base64_decode(key);
+			} catch (e) {
+				console.log(e);
+				throw new AccountValueError("new-addr-key", "The key must be a valid base64 string.");
+			}
+			if (!this.key.length) {
+				throw new AccountValueError("new-addr-key", "The key must not be empty.");
+			}
 		}
 	}
 
@@ -43,15 +78,41 @@ class Account {
 	}
 
 	register() {
+		// Handle duplicate
+		if (localStorage.getItem(this.getName())) {
+			throw new AccountValueError("", "The account already exists.");
+		}
 		localStorage.setItem(this.getName(), JSON.stringify(this));
 	}
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+	// Functions to display and remove the error message
+	function setErrorMessage(message) {
+		unsetErrorMessage();
+		const el = document.createElement('p');
+		el.classList.add('notification');
+		el.classList.add('is-danger');
+		el.classList.add('is-light');
+		el.appendChild(document.createTextNode(message));
+		document.querySelector('#new-account-error-msg-container').appendChild(el);
+	}
+
+	function unsetErrorMessage() {
+		const el_cont = document.querySelector('#new-account-error-msg-container');
+		while (el_cont.lastElementChild) {
+			el_cont.removeChild(el_cont.lastElementChild);
+		}
+		['#new-addr-local-part', '#new-addr-separator', '#new-addr-domain', '#new-addr-key'].forEach((selector) => {
+			document.querySelector(selector).classList.remove('is-danger');
+		});
+	}
+
 	// Functions to open and close a modal
 	function openModal(el) {
 		if (el.id === 'modal-del-account') {
-			document.querySelector('#del-account-name').innerHTML = getSelectedAccountName();
+			const name_el = document.createTextNode(getSelectedAccountName());
+			document.querySelector('#del-account-name').appendChild(name_el);
 		}
 		el.classList.add('is-active');
 	}
@@ -81,6 +142,9 @@ document.addEventListener('DOMContentLoaded', () => {
 	// Function to get an account by its name
 	function getAccountByName(name) {
 		const account_string = localStorage.getItem(name);
+		if (!account_string) {
+			return null;
+		}
 		const account_raw = JSON.parse(account_string);
 		return new Account(
 			account_raw.local_part,
@@ -150,21 +214,29 @@ document.addEventListener('DOMContentLoaded', () => {
 	// Add a click event on the new account button to register the new account
 	document.querySelector('#btn-new-account').addEventListener('click', (event) => {
 		console.log('Adding new account…');
-		const new_account = new Account(
-			document.querySelector('#new-addr-local-part').value,
-			document.querySelector('#new-addr-separator').value,
-			document.querySelector('#new-addr-domain').value,
-			document.querySelector('#new-addr-key').value,
-		);
-		console.log(new_account);
-		new_account.register();
-		console.log(`Account ${new_account.getName()} added.`);
-		['#new-addr-local-part', '#new-addr-domain', '#new-addr-key'].forEach((selector) => {
-			document.querySelector(selector).value = '';
-		});
-		document.querySelector('#new-addr-separator').value = '+';
-		syncAccountList();
-		closeAllModals();
+		try {
+			const new_account = new Account(
+				document.querySelector('#new-addr-local-part').value,
+				document.querySelector('#new-addr-separator').value,
+				document.querySelector('#new-addr-domain').value,
+				document.querySelector('#new-addr-key').value,
+			);
+			console.log(new_account);
+			new_account.register();
+			console.log(`Account ${new_account.getName()} added.`);
+			['#new-addr-local-part', '#new-addr-domain', '#new-addr-key'].forEach((selector) => {
+				document.querySelector(selector).value = '';
+			});
+			document.querySelector('#new-addr-separator').value = '+';
+			syncAccountList();
+			closeAllModals();
+		} catch (e) {
+			console.log(`${e.name}: ${e.field_id}: ${e.message}`);
+			setErrorMessage(e.message);
+			if (e.field_id) {
+				document.getElementById(e.field_id).classList.add('is-danger');
+			}
+		}
 	});
 
 	// Add a click event on the new address button to generate it
