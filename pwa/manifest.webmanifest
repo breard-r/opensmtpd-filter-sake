@@ -1,9 +1,0 @@
-{
-	"name": "Sub-Address KEy",
-	"short_name": "sake",
-	"id": "sub-address-key",
-	"description": "Sub-address generator for the Sub-Address KEy (SAKE) filter.",
-	"start_url": "/",
-	"lang": "en",
-	"display": "standalone"
-}
