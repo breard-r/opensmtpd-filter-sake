@@ -113,6 +113,10 @@ No, this project is based on the filter API used by OpenSMTPD.
 
 However, if someone implemented it in the exact same way for any other MTA, the progressive web app should work.
 
+### Does it supports IDN?
+
+Yes, internationalized domain names (IDN) are supported. You can specify domain names either using valid UTF-8 or Punycode ([RFC 3492](https://datatracker.ietf.org/doc/html/rfc3492)).
+
 ### What about key rotation?
 
 Rotating the key would mean that all previously generated addresses for this local part would suddenly be invalid. Therefore, the key associated with a local part must not change.
