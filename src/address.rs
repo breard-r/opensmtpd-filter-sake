@@ -17,10 +17,12 @@ impl CodedAddress {
 	pub fn parse(s: &str, separator: char) -> Result<Self> {
 		let (local_part, domain) = split_local_part(s);
 		ensure!(!local_part.is_empty(), "{s}: local part cannot be empty");
-		let domain = domain.map(|dom| -> Result<String> {
-			ensure!(!dom.is_empty(), "{s}: domain cannot be empty");
-			Ok(idna::domain_to_ascii(&dom)?)
-		}).transpose()?;
+		let domain = domain
+			.map(|dom| -> Result<String> {
+				ensure!(!dom.is_empty(), "{s}: domain cannot be empty");
+				Ok(idna::domain_to_ascii(&dom)?)
+			})
+			.transpose()?;
 		let parts: Vec<&str> = local_part.split(separator).collect();
 		let local_part = parts[0].to_string();
 		ensure!(!local_part.is_empty(), "{s}: local part cannot be empty");
@@ -109,10 +111,12 @@ impl FromStr for KeyedAddress {
 		let (address, key_b64) = ksplit.unwrap();
 		let (local_part, domain) = split_local_part(address);
 		ensure!(!local_part.is_empty(), "{s}: local part cannot be empty");
-		let domain = domain.map(|dom| -> Result<String> {
-			ensure!(!dom.is_empty(), "{s}: domain cannot be empty");
-			Ok(idna::domain_to_ascii(&dom)?)
-		}).transpose()?;
+		let domain = domain
+			.map(|dom| -> Result<String> {
+				ensure!(!dom.is_empty(), "{s}: domain cannot be empty");
+				Ok(idna::domain_to_ascii(&dom)?)
+			})
+			.transpose()?;
 		let key = BASE64.decode(key_b64.as_bytes())?;
 		ensure!(!key.is_empty(), "{s}: key cannot be empty");
 		Ok(Self {
