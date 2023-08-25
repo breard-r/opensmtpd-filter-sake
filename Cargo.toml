@@ -1,7 +1,7 @@
 [package]
 name = "filter-sake"
 version = "0.1.0"
-authors = ["Rodolphe Bréard <rodolphe@what.tf>"]
+authors = ["Rodolphe Bréard <v.code.ngyvz7vf@what.tf>"]
 edition = "2021"
 description = "Sub-address key filter for OpenSMTPD"
 license = "MIT OR Apache-2.0"
