@@ -1,0 +1,97 @@
+.\" Copyright (c) 2023 Rodolphe Bréard <v.man.fcb3mbje@breard.tf>
+.\"
+.\" Copying and distribution of this file, with or without modification,
+.\" are permitted in any medium without royalty provided the copyright
+.\" notice and this notice are preserved.  This file is offered as-is,
+.\" without any warranty.
+.Dd Aug 25, 2023
+.Dt FILTER-SAKE 8
+.Os
+.Sh NAME
+.Nm filter-sake
+.Nd Sub-address key filter for OpenSMTPD
+.Sh SYNOPSIS
+.Nm
+.Op Fl a|--address Ar STRING
+.Op Fl A|--address-file Ar FILE
+.Op Fl s|--separator Ar CHAR
+.Sh DESCRIPTION
+.Nm
+is a filter for OpenSMTPD that enforce the presence of a validation code in sub-addresses.
+.Pp
+The options are as follows:
+.Bl -tag
+.It Fl a, -address Ar STRING
+An address where the filter will enforce the presence of a valid verification code.
+See the
+.Sx ADDRESS FORMAT
+section to learn about the format that is expected.
+This option may be specified multiple times.
+.It Fl A, -address-file Ar FILE
+File where each line is an address as specified in
+.Dq --address .
+Empty lines and lines starting with the
+.Sq #
+character are ignored.
+.It Fl s, -separator Ar CHAR
+The sub-address delimiter character.
+Default is
+.Sq + .
+This value must match the character defined in
+.Pa smtpd.conf
+using
+.Dq smtp sub-addr-delim .
+.El
+.Sh ADDRESS FORMAT
+An address must be composed of the following elements:
+.Bl -dash -compact
+.It
+the local part
+.It
+(optional) an
+.Sq @
+followed by a domain name
+.It
+the
+.So
+:
+.Sc
+character
+.It
+the private key in base64 (with padding)
+.El
+.Pp
+Specifying a domain name configures the filter to match addresses on both the local part and the specified domain name.
+If no domain name is specified, the match will be on the local part only, and therefore all domain names will be accepted.
+.Sh PRIVATE KEY GENERATION
+Privates keys must have a length of either 128 bits (16 bytes) or 256 bits (32 bytes).
+Unless you have some very specific needs, you should choose a 128 bits key.
+.Pp
+To generate a key, it is recommended to use
+.Dq openssl rand -base64 16 .
+.Sh EXAMPLE OPENSMTPD CONFIGURATION
+The following example shows how you can integrate filter-sake in your
+.Pa smtpd.conf :
+.Bd -literal -offset indent
+# Sub-addresses
+smtp sub-addr-delim "+"
+filter "sake" proc-exec "filter-sake -s '+' -a 'a@example.org:11voiefK5PgCX5F1TTcuoQ==' -a 'b:3pUdigGQNXYBeKJdYDdERQ=='"
+
+# Tables
+table domains { "example.org", "example.com" }
+table vusers { "test" = "1000:100:/var/vmail/test", "b" = "1000:100:/var/vmail/b" }
+table aliases { "a" = "test" }
+
+# Listening
+listen on 127.0.0.1 hostname localhost filter "sake"
+listen on ::1 hostname localhost filter "sake"
+
+# Delivering
+action "deliver" maildir userbase <vusers> alias <aliases>
+match from any for domain <domains> action "deliver"
+.Ed
+.Sh SEE ALSO
+.Xr smtpd.conf 5
+.Sh AUTHORS
+.An Rodolphe Bréard
+.Aq v.man.fcb3mbje@breard.tf
