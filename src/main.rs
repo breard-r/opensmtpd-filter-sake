@@ -6,6 +6,7 @@ mod config;
 mod input;
 mod service;
 
+const ALLOWED_KEY_SIZES: &[usize] = &[16, 32];
 const COMMENT_CHAR: char = '#';
 const DEFAULT_SEPARATOR: char = '+';
 const KEY_SEPARATOR: char = ':';

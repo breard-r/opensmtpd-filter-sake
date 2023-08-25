@@ -119,6 +119,10 @@ impl FromStr for KeyedAddress {
 			.transpose()?;
 		let key = BASE64.decode(key_b64.as_bytes())?;
 		ensure!(!key.is_empty(), "{s}: key cannot be empty");
+		ensure!(
+			crate::ALLOWED_KEY_SIZES.contains(&key.len()),
+			"{s}: key length must be either 128 or 256 bits"
+		);
 		Ok(Self {
 			local_part,
 			domain,
@@ -167,6 +171,11 @@ mod tests {
 	#[test]
 	fn parse_keyed_addr_empty_domain() {
 		assert!(KeyedAddress::from_str("derp@").is_err());
+	}
+
+	#[test]
+	fn parse_keyed_addr_invalid_key_length() {
+		assert!(KeyedAddress::from_str("test:bAXk1r7mgJY=").is_err());
 	}
 
 	#[test]
@@ -248,13 +257,19 @@ mod tests {
 
 	#[test]
 	fn parse_valid_keyed_addr_without_domain() {
-		let addr_str = "local.part:3d74YQqk";
+		let addr_str = "local.part:sbW22xNStWKro4nnMKmG3A==";
 		let addr = KeyedAddress::from_str(addr_str);
 		assert!(addr.is_ok(), "unable to parse {addr_str}: {addr:?}");
 		let addr = addr.unwrap();
 		assert_eq!(addr.local_part, "local.part");
 		assert_eq!(addr.domain, None);
-		assert_eq!(addr.key, vec![0xdd, 0xde, 0xf8, 0x61, 0x0a, 0xa4]);
+		assert_eq!(
+			addr.key,
+			vec![
+				0xb1, 0xb5, 0xb6, 0xdb, 0x13, 0x52, 0xb5, 0x62, 0xab, 0xa3, 0x89, 0xe7, 0x30, 0xa9,
+				0x86, 0xdc
+			]
+		);
 	}
 
 	#[test]
@@ -305,77 +320,84 @@ mod tests {
 
 	#[test]
 	fn cmp_keyed_addr_with_domain_eq() {
-		let addr_1 = KeyedAddress::from_str("test@example.org:3d74YQqk").unwrap();
+		let addr_1 =
+			KeyedAddress::from_str("test@example.org:gkJfLlKa2OLYItm4JD6p3hEF1kWH8LFtMK0rra8A2SQ=")
+				.unwrap();
 		let addr_2 = KeyedAddress::from_str("test@example.org:11voiefK5PgCX5F1TTcuoQ==").unwrap();
 		assert_eq!(addr_1, addr_2);
 	}
 
 	#[test]
 	fn cmp_keyed_addr_without_domain_eq() {
-		let addr_1 = KeyedAddress::from_str("test:3d74YQqk").unwrap();
+		let addr_1 =
+			KeyedAddress::from_str("test:gkJfLlKa2OLYItm4JD6p3hEF1kWH8LFtMK0rra8A2SQ=").unwrap();
 		let addr_2 = KeyedAddress::from_str("test:11voiefK5PgCX5F1TTcuoQ==").unwrap();
 		assert_eq!(addr_1, addr_2);
 	}
 
 	#[test]
 	fn cmp_keyed_addr_with_domain_ne() {
-		let addr_1 = KeyedAddress::from_str("test@example.org:3d74YQqk").unwrap();
-		let addr_2 = KeyedAddress::from_str("test2@example.org:3d74YQqk").unwrap();
+		let addr_1 = KeyedAddress::from_str("test@example.org:sbW22xNStWKro4nnMKmG3A==").unwrap();
+		let addr_2 = KeyedAddress::from_str("test2@example.org:sbW22xNStWKro4nnMKmG3A==").unwrap();
 		assert_ne!(addr_1, addr_2);
 	}
 
 	#[test]
 	fn cmp_keyed_addr_without_domain_ne() {
-		let addr_1 = KeyedAddress::from_str("test:3d74YQqk").unwrap();
-		let addr_2 = KeyedAddress::from_str("test2:3d74YQqk").unwrap();
+		let addr_1 =
+			KeyedAddress::from_str("test:gkJfLlKa2OLYItm4JD6p3hEF1kWH8LFtMK0rra8A2SQ=").unwrap();
+		let addr_2 =
+			KeyedAddress::from_str("test2:gkJfLlKa2OLYItm4JD6p3hEF1kWH8LFtMK0rra8A2SQ=").unwrap();
 		assert_ne!(addr_1, addr_2);
 	}
 
 	#[test]
 	fn cmp_addr_types_with_domain_eq() {
-		let addr_1 = KeyedAddress::from_str("test@example.org:3d74YQqk").unwrap();
+		let addr_1 = KeyedAddress::from_str("test@example.org:sbW22xNStWKro4nnMKmG3A==").unwrap();
 		let addr_2 = CodedAddress::parse("test+test+orsxg5a@example.org", '+').unwrap();
 		assert_eq!(addr_1, addr_2);
 	}
 
 	#[test]
 	fn cmp_addr_types_without_domain_eq() {
-		let addr_1 = KeyedAddress::from_str("test:3d74YQqk").unwrap();
+		let addr_1 = KeyedAddress::from_str("test:sbW22xNStWKro4nnMKmG3A==").unwrap();
 		let addr_2 = CodedAddress::parse("test+test+orsxg5a", '+').unwrap();
 		assert_eq!(addr_1, addr_2);
 	}
 
 	#[test]
 	fn cmp_addr_types_without_sub_addr() {
-		let addr_1 = KeyedAddress::from_str("test@example.org:3d74YQqk").unwrap();
+		let addr_1 = KeyedAddress::from_str("test@example.org:sbW22xNStWKro4nnMKmG3A==").unwrap();
 		let addr_2 = CodedAddress::parse("test@example.org", '+').unwrap();
 		assert_eq!(addr_1, addr_2);
 	}
 
 	#[test]
 	fn cmp_addr_types_idna_1() {
-		let addr_1 = KeyedAddress::from_str("test@mél.example.org:3d74YQqk").unwrap();
+		let addr_1 =
+			KeyedAddress::from_str("test@mél.example.org:sbW22xNStWKro4nnMKmG3A==").unwrap();
 		let addr_2 = CodedAddress::parse("test@xn--ml-bja.example.org", '+').unwrap();
 		assert_eq!(addr_1, addr_2);
 	}
 
 	#[test]
 	fn cmp_addr_types_idna_2() {
-		let addr_1 = KeyedAddress::from_str("test@xn--ml-bja.example.org:3d74YQqk").unwrap();
+		let addr_1 =
+			KeyedAddress::from_str("test@xn--ml-bja.example.org:sbW22xNStWKro4nnMKmG3A==").unwrap();
 		let addr_2 = CodedAddress::parse("test@mél.example.org", '+').unwrap();
 		assert_eq!(addr_1, addr_2);
 	}
 
 	#[test]
 	fn cmp_addr_types_with_domain_ne() {
-		let addr_1 = KeyedAddress::from_str("test@example.org:3d74YQqk").unwrap();
+		let addr_1 = KeyedAddress::from_str("test@example.org:sbW22xNStWKro4nnMKmG3A==").unwrap();
 		let addr_2 = CodedAddress::parse("test+test+orsxg5a@example.com", '+').unwrap();
 		assert_ne!(addr_1, addr_2);
 	}
 
 	#[test]
 	fn cmp_addr_types_without_domain_ne() {
-		let addr_1 = KeyedAddress::from_str("test:3d74YQqk").unwrap();
+		let addr_1 = KeyedAddress::from_str("test:sbW22xNStWKro4nnMKmG3A==").unwrap();
 		let addr_2 = CodedAddress::parse("test2+test+orsxg5a", '+').unwrap();
 		assert_ne!(addr_1, addr_2);
 	}

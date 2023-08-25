@@ -51,7 +51,7 @@ The `--address` option may be specified multiples times and can also be combined
 
 In an address file, empty lines and lines starting with the `#` character are ignored.
 
-To generate a private key, it is recommended to use the following command:
+The private key's length must be either 128 or 256 bits. To generate a 128 bits key, the following command is recommended:
 
 ```
 openssl rand -base64 16
@@ -114,6 +114,10 @@ No, this project is based on the filter API used by OpenSMTPD.
 ### Does it supports IDN?
 
 Yes, internationalized domain names (IDN) are supported. You can specify domain names either using valid UTF-8 or Punycode ([RFC 3492](https://datatracker.ietf.org/doc/html/rfc3492)).
+
+### How long should be my private key?
+
+Privates keys must have a length of either 128 bits (16 bytes) or 256 bits (32 bytes). Unless you have some very specific needs, you should choose a 128 bits key.
 
 ### What about key rotation?
 
