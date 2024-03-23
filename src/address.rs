@@ -34,7 +34,7 @@ impl CodedAddress {
 		let code = if parts.len() >= 3 {
 			BASE32_NOPAD
 				.decode(parts[2].to_uppercase().as_bytes())
-				.unwrap_or(Vec::new())
+				.unwrap_or_default()
 		} else {
 			Vec::new()
 		};
