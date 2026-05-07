@@ -1,5 +1,5 @@
 use crate::code::generate_code;
-use anyhow::{ensure, Error, Result};
+use anyhow::{Error, Result, ensure};
 use data_encoding::{BASE32_NOPAD, BASE64};
 use std::hash::{Hash, Hasher};
 use std::str::FromStr;
@@ -60,17 +60,13 @@ impl KeyedAddress {
 		if addr.local_part.is_empty() || self.key.is_empty() {
 			return false;
 		}
-		match &addr.sub_addr {
-			Some(sub_addr) => {
-				if !sub_addr.is_empty() {
-					addr.code
-						== generate_code(&addr.local_part, addr.separator, sub_addr, &self.key)
-				} else {
-					false
-				}
-			}
-			None => false,
+		if let Some(sub_addr) = &addr.sub_addr
+			&& !sub_addr.is_empty()
+		{
+			return addr.code
+				== generate_code(&addr.local_part, addr.separator, sub_addr, &self.key);
 		}
+		false
 	}
 }
 
@@ -82,12 +78,11 @@ impl PartialEq for KeyedAddress {
 
 impl PartialEq<CodedAddress> for KeyedAddress {
 	fn eq(&self, other: &CodedAddress) -> bool {
-		if let Some(domain_k) = &self.domain {
-			if let Some(domain_c) = &other.domain {
-				if domain_k != domain_c {
-					return false;
-				}
-			}
+		if let Some(domain_k) = &self.domain
+			&& let Some(domain_c) = &other.domain
+			&& domain_k != domain_c
+		{
+			return false;
 		}
 		self.local_part == other.local_part
 	}
